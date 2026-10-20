@@ -50,6 +50,14 @@ helo helo. This is interesting to say the least.
 
 And sorry for the past mistake.. I have now fixed Roke.
 
+### New Feature
+
+This is my new feature:
+
+```{r}
+Debbie_palette <- c("#ABDEE6", "#CBAACB", "#FFCCB6", "#e7298a")
+```
+
 ## Roque
 
 holaaaa
