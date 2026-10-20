@@ -28,6 +28,14 @@ Hello, I am Teo and I am going to insert a little bit of code.
 my_favorite_foods <- c("pizza", "rice", "churros")
 ```
 
+#### New analysis
+
+My favorite temperature
+
+```{r}
+fav_temp <- 'My favorite temperature is 23ºC'
+```
+
 ## Michele
 
 ```{r}
