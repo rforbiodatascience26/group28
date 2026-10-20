@@ -1,0 +1,34 @@
+---
+title: "Lab 7 Assignment: Group 28"
+format:
+  html:
+    embed-resources: true
+editor: visual
+author: Michele Spanu (s263475), Teodora Ruso Vidal (s263487), Deborah Linda Neri Saren (s260735), Pilar Goñi (s263489), Roque Lizasoain Vallejo (s263514)
+---
+
+# Lab 7 assignment
+
+## Background
+
+## Aim
+
+## Library loading
+
+```{r}
+library(tidyverse)
+library(broom)
+library(cowplot)
+```
+
+## Data loading
+
+## Data processing
+
+## Results
+
+### Data in PC coordinates
+
+### Rotation matrix
+
+### Variance explained by each PC
