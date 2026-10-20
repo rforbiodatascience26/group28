@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Pilar 
+## Pilar
 
 ```{r}
 
@@ -14,8 +14,14 @@ editor: visual
 
 ## Michele
 
+```{r}
+library("here")
+```
+
+Here is my lazy work
+
 ## Debbie
 
 ## Roke
 
-##  
+## 
