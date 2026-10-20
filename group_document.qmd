@@ -28,6 +28,14 @@ library("here")
 
 Here is my lazy work
 
+### New feature
+
+I don't know
+
+```{r}
+(1+1)
+```
+
 ## Debbie
 
 helo helo. This is interesting to say the least.
