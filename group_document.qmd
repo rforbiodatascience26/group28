@@ -12,6 +12,14 @@ holis
 library("tidyverse")
 ```
 
+[**New feature**]{.underline}
+
+Entering more text and code chunks:
+
+```{r}
+me <- "hi I'm Pilar"
+```
+
 ## Teo
 
 Hello, I am Teo and I am going to insert a little bit of code.
