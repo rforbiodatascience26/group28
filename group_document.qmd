@@ -32,4 +32,10 @@ Here is my lazy work
 
 helo helo. This is interesting to say the least. \## Roke
 
-## 
+## Roque
+
+holaaaa
+
+```{r}
+here i am
+```
