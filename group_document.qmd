@@ -6,11 +6,19 @@ editor: visual
 
 ## Pilar
 
-```{r}
+holis
 
+```{r}
+library("tidyverse")
 ```
 
 ## Teo
+
+Hello, I am Teo and I am going to insert a little bit of code.
+
+```{r}
+my_favorite_foods <- c("pizza", "rice", "churros")
+```
 
 ## Michele
 
@@ -21,7 +29,6 @@ library("here")
 Here is my lazy work
 
 ## Debbie
-
 helo helo. This is interesting to say the least.
 
 And sorry for the past mistake.. I have now fixed Roke.
