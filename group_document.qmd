@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Pilar 
+## Pilar
 
 ```{r}
 
@@ -12,10 +12,16 @@ editor: visual
 
 ## Teo
 
+Hello, I am Teo and I am going to insert a little bit of code.
+
+```{r}
+my_favorite_foods <- c("pizza", "rice", "churros")
+```
+
 ## Michele
 
 ## Debbie
 
 ## Roke
 
-##  
+## 
