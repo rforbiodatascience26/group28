@@ -35,6 +35,10 @@ library("cowplot")
 
 a block where the path "data/\_raw/" is created iff it doesn't exist #RKKK
 
+```{r}
+
+```
+
 a block where the data is loaded and efficiently saved if not already done (this should be placed in data/\_raw/dataset_name.csv.gz and an if statement should check its presence)
 
 a block where the efficient data is loaded and displayed (should be stored in a variable named dataset_name)
