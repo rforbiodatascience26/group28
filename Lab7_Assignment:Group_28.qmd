@@ -66,6 +66,15 @@ dataset_name_long_lms <- dataset_name_long %>%
 
 unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
 
+```{r}
+dataset_name_estimates <- dataset_name_long_lms |>
+  mutate(tidy_model = map(model_object, broom::tidy)) |>
+  unnest(tidy_model) |>
+  filter(term != "(Intercept)") |>
+  ungroup() |>
+  select(gene, estimate, std.error, statistic, p.value)
+```
+
 compute the q.value, and the is_significant cols
 
 ## Data Processing II (PCA)
