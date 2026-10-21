@@ -11,7 +11,17 @@ author: "Michele Spanu (s263475), Teodora Ruso Vidal (s263487), Deborah Linda Ne
 
 ## Background
 
+Breast cancer is among the most common cancers worldwide, and for most patients it is not the primary tumour itself that is fatal, but the spread of tumour cells to distant organs (metastasis). Tumour cells can briefly acquire the ability to detach themselves from the primary tumour. They then invade surrounding tissue, enter the blood or lymphatic vessels, and finally establish new tumours in other areas of the body. Patients who develop metastasis early have a generally poorer prognosis. Therefore, it is important that we identify them at diagnosis to provide the best treatment.
+
+How aggressively a tumour behaves depends a lot on which genes the tumour cells express and at what level. With microarray technology, we can measure the expression level of thousands of genes at the same time. This gives an expression profile for each patient, which can then be compared between groups with different clinical outcomes. Genes expressed at higher levels in one group are up-regulated, and genes expressed at lower levels are down-regulated. These genes are interesting because they can work as prognostic biomarkers.
+
 ## Aim
+
+The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modeling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
+
+-   To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
+
+-   To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
 
 ## Library loading
 
@@ -23,7 +33,7 @@ library("cowplot")
 
 ## Data loading
 
-a block where the path "data/\_raw/" is created iff it doesn't exist
+a block where the path "data/\_raw/" is created iff it doesn't exist #RKKK
 
 a block where the data is loaded and efficiently saved if not already done (this should be placed in data/\_raw/dataset_name.csv.gz and an if statement should check its presence)
 
