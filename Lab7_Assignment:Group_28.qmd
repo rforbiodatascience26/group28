@@ -17,21 +17,19 @@ How aggressively a tumour behaves depends a lot on which genes the tumour cells 
 
 ## Aim
 
-The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modelling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
+The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modeling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
 
--   To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
+- To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
 
--   To perform Principal Component Analysis (PCA) to reduce data dimensionality, evaluate variance explained by each component, and analyse patient clustering and gene loading contributions.
+- To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
 
 ## Library loading
 
 ```{r}
-#| message: false
-library("here")
-library("tidyverse")
+library("tidyverse") 
 library("broom") 
 library("cowplot")
-library("scales")
+library("here")
 ```
 
 ## Data loading
@@ -39,73 +37,52 @@ library("scales")
 ```{r}
 raw_dir <- here("data/_raw/")
 data_file <- "gravier.RData"
+csv_file <- "gravier.csv.gz"
 data_loc <- "https://github.com/ramhiser/datamicroarray/raw/master/data/"
-```
 
-We create the path "data/\_raw/" if it doesn't exist. Here we will store our data.
-
-```{r}
-if (!dir.exists(raw_dir)) {
-  dir.create(raw_dir, recursive = TRUE)
+if( !dir.exists(raw_dir) ){
+  dir.create(path = raw_dir, recursive = TRUE)
 }
-```
 
-a block where the data is loaded and efficiently saved if not already done (this should be placed in data/\_raw/dataset_name.csv.gz and an if statement should check its presence)
+if( !file.exists(str_c(raw_dir, csv_file)) ){
+  download.file(
+    url = str_c(data_loc, data_file),
+    destfile = str_c(raw_dir, data_file))
+}
 
-a block where the efficient data is loaded and displayed (should be stored in a variable named dataset_name)
+load(file = str_c(raw_dir, data_file))
+write_csv(bind_cols(gravier$x, y = gravier$y), str_c(raw_dir, csv_file))
 
-```{r}
-(gravier <- read.csv(paste0(raw_dir, "/gravier.csv.gz")
-                     ))
+gravier_data <- read_csv(str_c(raw_dir, csv_file))
+gravier_data
 ```
 
 ## Data Description
 
-In this report, we look at the data from Gravier et al. (2010), who studied small node-negative breast carcinomas. The data contain log2 gene expression levels for 2,905 genes measured in 168 patients. Of these patients, 111 did not develop early metastasis, and 57 did.
+write data description section
 
 ## Data Processing I (linear models)
 
 put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
 
-```{r}
-gravier <- gravier |>
-  bind_cols() |>
-  as_tibble() |>
-  mutate(y = case_when(y == "poor" ~ 1,
-                       y == "good" ~ 0)) |> 
-  relocate(early_metastasis = y)
-```
-
 transform the data in long format for genes and expression (call new variable dataset_name_long)
-
-```{r}
-gravier_long <- gravier |>
-  pivot_longer(cols = -early_metastasis,
-               names_to = "gene",
-               values_to = "expression")
-```
 
 fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
 
 ```{r}
-gravier_long_lms <- gravier_long |>
-  group_by(gene) |>
-  nest() |>
+dataset_name_long_lms <- dataset_name_long %>%
+  group_by(gene) %>%
+  nest() %>%
   mutate(
-    model_object = map(.x = data, 
-                       .f = ~ lm(expression ~ early_metastasis, 
-                                 data = .x)
-                       )
-    )
+    model_object = map(data, ~ lm(expression ~ early_metastasis, data = .x))
+  )
 ```
 
 unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
 
 ```{r}
-gravier_estimates <- gravier_long_lms |>
-  mutate(tidy_model = map(.x = model_object, 
-                          .f = broom::tidy)
-         ) |>
+dataset_name_estimates <- dataset_name_long_lms |>
+  mutate(tidy_model = map(model_object, broom::tidy)) |>
   unnest(tidy_model) |>
   filter(term != "(Intercept)") |>
   ungroup() |>
@@ -120,12 +97,13 @@ perform pca on dataset_name (call variable dataset_name_pca)
 
 extract variance explained by each PC (call variable dataset_name_pca_explained_var)
 
-```{r}
-gravier_pca_explained_var <- gravier_pca |>
-  tidy(matrix = "eigenvalues")
-```
+extract rotations (call variable dataset_name_pca_rotations)
 
-We extract rotations from *gravier_pca* and factor the PC column after prepending the string "PC" to each value.
+```{r}
+gravier_pca <- gravier_data |>
+  select(-early_metastasis) |>
+  prcomp(scale = T)
+```
 
 ```{r}
 gravier_pca_rotations <- gravier_pca |>
@@ -137,15 +115,11 @@ gravier_pca_rotations <- gravier_pca |>
   rename(gene = column)
 ```
 
-We transform the *gravier_pca_rotations* data into wide format.
-
 ```{r}
 gravier_pca_rotations_wide <- gravier_pca_rotations |>
   pivot_wider(names_from = "PC",
               values_from = "value")
 ```
-
-We extract the top 10 genes (greatest absolute loading) for each PC.
 
 ```{r}
 top_PC_genes <- gravier_pca_rotations |>
@@ -156,6 +130,34 @@ top_PC_genes <- gravier_pca_rotations |>
           ) |>
   slice_head(n = 10) |>
   ungroup()
+```
+
+```{r}
+arrow_style <- arrow(
+  angle = 20, ends = "first", type = "closed", length = grid::unit(8, "pt")
+)
+
+# plot rotation matrix
+
+x_col = "PC1"
+y_col = "PC2"
+
+
+target_genes <- top_PC_genes |>
+  filter(PC %in% c(x_col, y_col)) |>
+  pull(gene)
+
+gravier_pca_rotations_wide |>
+  filter(gene %in% target_genes) |>
+  ggplot(aes(.data[[x_col]] * 1000, .data[[y_col]] * 1000)) +
+  geom_segment(xend = 0, yend = 0, arrow = arrow_style) +
+  geom_text(
+    aes(label = gene),
+    hjust = 1, nudge_x = -0.02, 
+    color = "#904C2F"
+  ) +
+  coord_fixed() + # fix aspect ratio to 1:1
+  theme_minimal_grid(12)
 ```
 
 ## Results
@@ -175,13 +177,15 @@ Comment PCA plot (are groups separated? do you see other clusters)
 ### Variance explained by each PC
 
 ```{r}
-gravier_pca_explained_var |>
+dataset_name_pca_explained_var <- dataset_name_pca |>
+  tidy(matrix = "eigenvalues")
+
+dataset_name_pca_explained_var |>
   ggplot(aes(x = PC, y = percent)) +
   geom_col(fill = "steelblue") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal_grid(12) +
-  labs(x = "Principal Component", 
-       y = "Variance Explained")
+  labs(x = "Principal Component", y = "Variance Explained")
 ```
 
 Comment histogram (which are the most important components? would it make sense to consider a different pair than PC1-vs-PC2?)
@@ -212,7 +216,7 @@ The following table contains the top 10 genes per PC with the highest absolute l
 
 Genes highlighted in bold (?) are the ones reported in the Forest plot.
 
-From the two independent analyses, we can see how the same genes keep popping up.
+From the two independent analyses we can see how the same genes keep popping up.
 
 Comment plot rotation matrix (which are the genes that contribute most to each PC? Are any of the genes found in the forest plot coming up again?)
 
