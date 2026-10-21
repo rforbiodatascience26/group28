@@ -36,7 +36,9 @@ library("cowplot")
 a block where the path "data/\_raw/" is created iff it doesn't exist #RKKK
 
 ```{r}
-
+if (!dir.exists("data/_raw/")) {
+  dir.create("data/_raw/", recursive = TRUE)
+}
 ```
 
 a block where the data is loaded and efficiently saved if not already done (this should be placed in data/\_raw/dataset_name.csv.gz and an if statement should check its presence)
