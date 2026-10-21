@@ -67,7 +67,23 @@ In this report, we look at the data from Gravier et al. (2010), who studied smal
 
 put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
 
+```{r}
+gravier <- gravier |>
+  bind_cols() |>
+  as_tibble() |>
+  mutate(y = case_when(y == "poor" ~ 1,
+                       y == "good" ~ 0)) |> 
+  relocate(early_metastasis = y)
+```
+
 transform the data in long format for genes and expression (call new variable dataset_name_long)
+
+```{r}
+gravier_long <- gravier |>
+  pivot_longer(cols = -early_metastasis,
+               names_to = "gene",
+               values_to = "expression")
+```
 
 fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
 
