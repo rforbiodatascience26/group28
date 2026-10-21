@@ -33,8 +33,6 @@ library("cowplot")
 
 ## Data loading
 
-a block where the path "data/\_raw/" is created iff it doesn't exist #RKKK
-
 ```{r}
 if (!dir.exists("data/_raw/")) {
   dir.create("data/_raw/", recursive = TRUE)
@@ -56,6 +54,15 @@ put together x and y into the same df, put y as first col, refactor y as 0/1, an
 transform the data in long format for genes and expression (call new variable dataset_name_long)
 
 fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
+
+```{r}
+dataset_name_long_lms <- dataset_name_long %>%
+  group_by(gene) %>%
+  nest() %>%
+  mutate(
+    model_object = map(data, ~ lm(expression ~ early_metastasis, data = .x))
+  )
+```
 
 unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
 
@@ -146,7 +153,17 @@ Comment PCA plot (are groups separated? do you see other clusters)
 
 ### Variance explained by each PC
 
-Plot histogram of Variance explained
+```{r}
+dataset_name_pca_explained_var <- dataset_name_pca |>
+  tidy(matrix = "eigenvalues")
+
+dataset_name_pca_explained_var |>
+  ggplot(aes(x = PC, y = percent)) +
+  geom_col(fill = "steelblue") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal_grid(12) +
+  labs(x = "Principal Component", y = "Variance Explained")
+```
 
 Comment histogram (which are the most important components? would it make sense to consider a different pair than PC1-vs-PC2?)
 
