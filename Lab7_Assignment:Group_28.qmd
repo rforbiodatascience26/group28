@@ -53,6 +53,67 @@ extract variance explained by each PC (call variable dataset_name_pca_explained_
 
 extract rotations (call variable dataset_name_pca_rotations)
 
+```{r}
+gravier_pca <- gravier_data |>
+  select(-early_metastasis) |>
+  prcomp(scale = T)
+```
+
+```{r}
+gravier_pca_rotations <- gravier_pca |>
+  tidy(matrix = "rotation") |>
+  mutate(PC = paste0("PC", PC) |>
+           factor(levels = paste0("PC", 1:max(PC))
+                 )
+         ) |>
+  rename(gene = column)
+```
+
+```{r}
+gravier_pca_rotations_wide <- gravier_pca_rotations |>
+  pivot_wider(names_from = "PC",
+              values_from = "value")
+```
+
+```{r}
+top_PC_genes <- gravier_pca_rotations |>
+  group_by(PC) |>
+  arrange(desc(value |>
+                 abs()
+               )
+          ) |>
+  slice_head(n = 10) |>
+  ungroup()
+```
+
+```{r}
+arrow_style <- arrow(
+  angle = 20, ends = "first", type = "closed", length = grid::unit(8, "pt")
+)
+
+# plot rotation matrix
+
+x_col = "PC1"
+y_col = "PC2"
+
+
+target_genes <- top_PC_genes |>
+  filter(PC %in% c(x_col, y_col)) |>
+  pull(gene)
+
+gravier_pca_rotations_wide |>
+  filter(gene %in% target_genes) |>
+  ggplot(aes(.data[[x_col]] * 1000, .data[[y_col]] * 1000)) +
+  geom_segment(xend = 0, yend = 0, arrow = arrow_style) +
+  geom_text(
+    aes(label = gene),
+    hjust = 1, nudge_x = -0.02, 
+    color = "#904C2F"
+  ) +
+  coord_fixed() + # fix aspect ratio to 1:1
+  theme_minimal_grid(12)
+```
+
 ## Results
 
 ### Forest plot
@@ -73,9 +134,33 @@ Plot histogram of Variance explained
 
 Comment histogram (which are the most important components? would it make sense to consider a different pair than PC1-vs-PC2?)
 
-### Rotation matrix
+### PCA loadings
 
-Plot rotation matrix graph
+```{r}
+gravier_pca_rotations |>
+  filter(PC %in% paste0("PC", 1:20)) |>
+  ggplot(aes(x = PC, y = gene, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "firebrick", mid = "white", high = "steelblue") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.text.y = element_blank())
+```
+
+The following heatmap shows the gene loadings for the first 20 PCs. \[Need the data to visualise again results\]
+
+```{r}
+pcs_of_interest = c("PC1", "PC2")
+
+target_genes <- top_PC_genes |> filter(PC %in% pcs_of_interest) |> pull(gene)
+
+gravier_pca_rotations_wide |> filter(gene %in% target_genes) |> select(gene, all_of(pcs_of_interest))
+```
+
+The following table contains the top 10 genes per PC with the highest absolute loading. Only the top \# PCs deemed important in explaining early metastasis were considered.
+
+Genes highlighted in bold (?) are the ones reported in the Forest plot.
+
+From the two independent analyses we can see how the same genes keep popping up.
 
 Comment plot rotation matrix (which are the genes that contribute most to each PC? Are any of the genes found in the forest plot coming up again?)
 
