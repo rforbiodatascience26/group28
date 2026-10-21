@@ -65,7 +65,7 @@ In this report, we look at the data from Gravier et al. (2010), who studied smal
 
 ## Data Processing I (linear models)
 
-put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
+Merge the x and y elements in the gravier dataset (list) into a single dataframe. *y* is then refactored as 0/1, moved to the first column and renamed *early_metastasis*.
 
 ```{r}
 gravier <- gravier |>
@@ -76,7 +76,7 @@ gravier <- gravier |>
   relocate(early_metastasis = y)
 ```
 
-transform the data in long format for genes and expression (call new variable dataset_name_long)
+*gravier* is transformed into long format to have all genes in a single column (*gene*) and their respective expression in another (*expression*).
 
 ```{r}
 gravier_long <- gravier |>
@@ -85,7 +85,7 @@ gravier_long <- gravier |>
                values_to = "expression")
 ```
 
-fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
+Fit a linear model (lm) for each gene expression using early_metastasis as the predictor. The resulting lm model is nested in *gravier_long_lms*.
 
 ```{r}
 gravier_long_lms <- gravier_long |>
@@ -99,7 +99,7 @@ gravier_long_lms <- gravier_long |>
     )
 ```
 
-unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
+Retrieve estimates for the slope coefficient, and tidy the model.
 
 ```{r}
 gravier_estimates <- gravier_long_lms |>
