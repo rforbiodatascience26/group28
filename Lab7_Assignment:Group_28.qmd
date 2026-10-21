@@ -1,0 +1,84 @@
+---
+title: "Lab 7 Assignment: Group 28"
+format:
+  html:
+    embed-resources: true
+editor: visual
+author: "Michele Spanu (s263475), Teodora Ruso Vidal (s263487), Deborah Linda Neri Saren (s260735), Pilar Goñi (s263489), Roque Lizasoain Vallejo (s263514)"
+---
+
+# Lab 7 assignment
+
+## Background
+
+## Aim
+
+## Library loading
+
+```{r}
+library("tidyverse") 
+library("broom") 
+library("cowplot")
+```
+
+## Data loading
+
+a block where the path "data/\_raw/" is created iff it doesn't exist
+
+a block where the data is loaded and efficiently saved if not already done (this should be placed in data/\_raw/dataset_name.csv.gz and an if statement should check its presence)
+
+a block where the efficient data is loaded and displayed (should be stored in a variable named dataset_name)
+
+## Data Description
+
+write data description section
+
+## Data Processing I (linear models)
+
+put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
+
+transform the data in long format for genes and expression (call new variable dataset_name_long)
+
+fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
+
+unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
+
+compute the q.value, and the is_significant cols
+
+## Data Processing II (PCA)
+
+perform pca on dataset_name (call variable dataset_name_pca)
+
+extract variance explained by each PC (call variable dataset_name_pca_explained_var)
+
+extract rotations (call variable dataset_name_pca_rotations)
+
+## Results
+
+### Forest plot
+
+Forest plot of significant genes by lm
+
+Coment results of forest plot
+
+### Data in PC coordinates
+
+PCA plot, style it well, use y to colour points
+
+Comment PCA plot (are groups separated? do you see other clusters)
+
+### Variance explained by each PC
+
+Plot histogram of Variance explained
+
+Comment histogram (which are the most important components? would it make sense to consider a different pair than PC1-vs-PC2?)
+
+### Rotation matrix
+
+Plot rotation matrix graph
+
+Comment plot rotation matrix (which are the genes that contribute most to each PC? Are any of the genes found in the forest plot coming up again?)
+
+## Conclusions
+
+Summarise findings and clearly state how the analysis achieved its aim.
