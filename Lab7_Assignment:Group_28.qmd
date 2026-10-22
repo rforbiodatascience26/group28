@@ -58,7 +58,7 @@ if( !file.exists(str_c(raw_dir, csv_file)) ){
     destfile = str_c(raw_dir, data_file))
   
   load(file = str_c(raw_dir, data_file))
-  write_csv(gravier, str_c(raw_dir, csv_file))
+  write_csv(bind_cols(gravier$x, y = gravier$y), str_c(raw_dir, csv_file))
 }
 ```
 
