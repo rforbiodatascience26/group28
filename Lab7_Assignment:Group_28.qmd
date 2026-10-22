@@ -19,9 +19,9 @@ How aggressively a tumour behaves depends a lot on which genes the tumour cells 
 
 The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modeling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
 
-- To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
+-   To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
 
-- To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
+-   To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
 
 ## Library loading
 
@@ -106,6 +106,11 @@ gravier_pca <- gravier_data |>
 ```
 
 ```{r}
+gravier_pca_explained_var <- gravier_pca |>
+  tidy(matrix = "eigenvalues")
+```
+
+```{r}
 gravier_pca_rotations <- gravier_pca |>
   tidy(matrix = "rotation") |>
   mutate(PC = paste0("PC", PC) |>
@@ -170,17 +175,35 @@ Coment results of forest plot
 
 ### Data in PC coordinates
 
-PCA plot, style it well, use y to colour points
+```{r}
+gravier_pca_coords <- gravier_pca |>
+  augment(gravier_data) |>
+  select(PC1 = .fittedPC1,
+         PC2 = .fittedPC2,
+         early_metastasis) |>
+  mutate(early_metastasis = case_when(early_metastasis == 0 ~ "No",
+                                      early_metastasis == 1 ~ "Yes"))
+```
+
+```{r}
+gravier_pca_coords |>
+  ggplot(mapping = aes(x = PC1,
+                       y = PC2,
+                       colour = early_metastasis)) +
+  geom_point(size = 1.5) +
+  scale_colour_manual(values = c("No" = "steelblue",
+                                 "Yes" = "firebrick")) +
+  theme_minimal_grid(12) +
+  labs(colour = "Early metastasis")
+```
 
 Comment PCA plot (are groups separated? do you see other clusters)
 
 ### Variance explained by each PC
 
 ```{r}
-dataset_name_pca_explained_var <- dataset_name_pca |>
-  tidy(matrix = "eigenvalues")
 
-dataset_name_pca_explained_var |>
+gravier_pca_explained_var |>
   ggplot(aes(x = PC, y = percent)) +
   geom_col(fill = "steelblue") +
   scale_y_continuous(labels = scales::percent) +
