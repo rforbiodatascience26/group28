@@ -19,9 +19,9 @@ How aggressively a tumour behaves depends a lot on which genes the tumour cells 
 
 The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modeling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
 
--   To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
+- To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
 
--   To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
+- To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
 
 ## Library loading
 
@@ -110,6 +110,10 @@ compute the q.value, and the is_significant cols
 ## Data Processing II (PCA)
 
 perform pca on dataset_name (call variable dataset_name_pca)
+
+```{r}
+gravier_pca <- prcomp(gravier, scale = TRUE)
+```
 
 extract variance explained by each PC (call variable dataset_name_pca_explained_var)
 
