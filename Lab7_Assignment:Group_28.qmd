@@ -189,7 +189,9 @@ gravier_estimates |>
   theme_minimal()
 ```
 
-Coment results of forest plot
+If each gene is tested on its own at a significance level of α = 0.05, we would expect around 145 genes to come out significant by chance alone. Therefore, we had to correct for multiple testing. The genes that survived the q-value assessment were retained and shown in this first plot.
+
+The Estimates (95% CI) plot displays the average difference in gene expression between patients with early metastasis and without (reference), along with the confidence interval. This visualization highlights general trends, showing which genes appear up or down‑regulated and how wide or narrow their confidence intervals are.
 
 ### Data in PC coordinates
 
