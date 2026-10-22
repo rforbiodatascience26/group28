@@ -232,6 +232,7 @@ gravier_pca_coords_lms <- gravier_pca |>
 Forest plot of significant genes by lm
 
 ```{r}
+#| fig-height: 7
 gravier_estimates |>
   filter(is_significant == "yes") |>
   mutate(gene = fct_reorder(.f = gene, .x = estimate)) |>
@@ -293,7 +294,6 @@ NOW COMMMENT THIS
 ### Variance explained by each PC
 
 ```{r}
-
 gravier_pca_explained_var |>
   ggplot(aes(x = PC, y = percent)) +
   geom_col(fill = "steelblue") +
@@ -321,14 +321,30 @@ The following heatmap shows the gene loadings for the first 20 PCs. Certain gene
 ```{r}
 pcs_of_interest = c("PC4", "PC5")
 
-target_genes <- top_PC_genes |> filter(PC %in% pcs_of_interest) |> pull(gene)
+target_genes <- top_PC_genes |>
+  filter(PC %in% pcs_of_interest) |>
+  pull(gene)
 
-gravier_pca_rotations_wide |> filter(gene %in% target_genes) |> select(gene, all_of(pcs_of_interest))
+gravier_pca_rotations_wide |>
+  filter(gene %in% target_genes) |>
+  select(gene, all_of(pcs_of_interest))
 ```
 
-Given such results, we only focused on the top 10 genes of PC4 and PC5 with the highest absolute loading.
+Given such results, we only focused on the top 10 genes of PC4 and PC5 with the highest absolute loading. We can clearly see that 10 of the 20 are the same genes found to be significant in the forest plot. This further corroborates their importance in the mechanism of metastasis in breast cancer patients.
 
-From the two independent analyses we can see how the same genes keep popping up.
+```{r}
+genes <- gravier_pca_rotations_wide |> 
+  filter(gene %in% target_genes) |> 
+  pull(gene)
+
+mask = genes %in% (gravier_estimates |>
+  filter(is_significant == "yes") |>
+  pull(gene))
+
+genes[mask]
+```
+
+This is the list of such genes.
 
 ## Conclusions
 
