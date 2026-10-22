@@ -19,9 +19,9 @@ How aggressively a tumour behaves depends a lot on which genes the tumour cells 
 
 The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modelling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
 
-- To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
+-   To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
 
-- To perform Principal Component Analysis (PCA) to reduce data dimensionality, evaluate variance explained by each component, and analyse patient clustering and gene loading contributions.
+-   To perform Principal Component Analysis (PCA) to reduce data dimensionality, evaluate variance explained by each component, and analyse patient clustering and gene loading contributions.
 
 ## Library loading
 
@@ -48,20 +48,22 @@ We create the path "data/\_raw/" if it doesn't exist. Here we will store our dat
 if (!dir.exists(raw_dir)) {
   dir.create(raw_dir, recursive = TRUE)
 }
+```
 
+We download and efficiently save the dataset if absent.
+
+```{r}
 if( !file.exists(str_c(raw_dir, csv_file)) ){
   download.file(
     url = str_c(data_loc, data_file),
     destfile = str_c(raw_dir, data_file))
+  
+  load(file = str_c(raw_dir, data_file))
+  write_csv(gravier, str_c(raw_dir, csv_file))
 }
-
-load(file = str_c(raw_dir, data_file))
-write_csv(bind_cols(gravier$x, y = gravier$y), str_c(raw_dir, csv_file))
 ```
 
-a block where the data is loaded and efficiently saved if not already done (this should be placed in data/\_raw/dataset_name.csv.gz and an if statement should check its presence)
-
-a block where the efficient data is loaded and displayed (should be stored in a variable named dataset_name)
+We load the data and display it.
 
 ```{r}
 (gravier <- read.csv(paste0(raw_dir, "/gravier.csv.gz")
