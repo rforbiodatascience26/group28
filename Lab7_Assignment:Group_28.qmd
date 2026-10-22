@@ -120,7 +120,7 @@ gravier_estimates <- gravier_long_lms |>
 compute the q.value, and the is_significant cols
 
 ```{r}
-gravier_estimates |>
+gravier_estimates <- gravier_estimates |>
   mutate(q.value = p.adjust(p.value),
        is_significant = case_when(q.value > 0.05 ~ "no", TRUE ~ "yes"))
 ```
