@@ -271,11 +271,7 @@ gravier_pca_rotations_wide |> filter(gene %in% target_genes) |> select(gene, all
 
 Given such results, we only focused on the top 10 genes per PC with the highest absolute loading. Only the top \# PCs deemed important in explaining early metastasis were considered.
 
-Genes highlighted in bold are the ones reported in the Forest plot.
-
 From the two independent analyses we can see how the same genes keep popping up.
-
-Comment plot rotation matrix (which are the genes that contribute most to each PC? Are any of the genes found in the forest plot coming up again?)
 
 ## Conclusions
 
