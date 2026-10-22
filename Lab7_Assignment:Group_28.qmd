@@ -26,6 +26,7 @@ The aim of this analysis is to identify prognostic biomarker genes associated wi
 ## Library loading
 
 ```{r}
+#| message: false
 library("here")
 library("tidyverse") 
 library("broom") 
@@ -75,11 +76,10 @@ In this report, we look at the data from Gravier et al. (2010), who studied smal
 
 ## Data Processing I (linear models)
 
-Merge the x and y elements in the gravier dataset (list) into a single dataframe. *y* is then refactored as 0/1, moved to the first column and renamed *early_metastasis*.
+*y* is then refactored as 0/1, moved to the first column and renamed *early_metastasis*.
 
 ```{r}
 gravier <- gravier |>
-  bind_cols() |>
   as_tibble() |>
   mutate(y = case_when(y == "poor" ~ 1,
                        y == "good" ~ 0)) |> 
@@ -102,7 +102,10 @@ gravier_long_lms <- gravier_long |>
   group_by(gene) |>
   nest() |>
   mutate(
-    model_object = map(data, ~ lm(expression ~ early_metastasis, data = .x))
+    model_object = map(.x = data, 
+                       .f = ~ lm(expression ~ early_metastasis, 
+                                 data = .x)
+                       )
   )
 ```
 
@@ -114,6 +117,7 @@ gravier_estimates <- gravier_long_lms |>
                                   .f = ~tidy(.x, conf.int = T,
                                              conf.level = 0.95)
                                   )) |>
+
   unnest(tidy_model) |>
   filter(term != "(Intercept)") |>
   ungroup() |>
@@ -193,7 +197,8 @@ gravier_estimates |>
   geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) +
   geom_point() +
   geom_vline(xintercept = 0) +
-  labs(x="Estimates (95%CIs)", y="",
+  labs(x="Estimates (95%CIs)",
+       y="",
        title="Genes Associated with Early Metastasis in Small Node-Negative Breast Carcinoma") +
   theme_minimal()
 ```
@@ -206,9 +211,9 @@ The Estimates (95% CI) plot displays the average difference in gene expression b
 
 ```{r}
 gravier_pca_coords <- gravier_pca |>
-  augment(gravier_data) |>
-  select(PC1 = .fittedPC1,
-         PC2 = .fittedPC2,
+  augment(gravier) |>
+  select(PC4 = .fittedPC4,
+         PC5 = .fittedPC5,
          early_metastasis) |>
   mutate(early_metastasis = case_when(early_metastasis == 0 ~ "No",
                                       early_metastasis == 1 ~ "Yes"))
@@ -216,8 +221,8 @@ gravier_pca_coords <- gravier_pca |>
 
 ```{r}
 gravier_pca_coords |>
-  ggplot(mapping = aes(x = PC1,
-                       y = PC2,
+  ggplot(mapping = aes(x = PC4,
+                       y = PC5,
                        colour = early_metastasis)) +
   geom_point(size = 1.5) +
   scale_colour_manual(values = c("No" = "steelblue",
@@ -226,7 +231,7 @@ gravier_pca_coords |>
   labs(colour = "Early metastasis")
 ```
 
-The two groups are not separated in the plot. Patients with and without early metastasis lie mixed together, and neither PC1 nor PC2 tells them apart. We do see two loose clusters along PC1, but both of them contain a mix of the two groups. Therefore, the biggest differences between the patients do not seem to come from metastasis status. However, PC1 and PC2 only cover 15.1% of the variance, so most of the variation is not shown here.
+The two groups are not separated in the plot. Patients with and without early metastasis lie mixed together, and neither PC1 nor PC2 tells them apart. We do see two loose clusters along PC1, but both of them contain a mix of the two groups. Therefore, the biggest differences between patients' gene expression profiles do not seem to come from metastasis status.
 
 ### Variance explained by each PC
 
@@ -254,17 +259,17 @@ gravier_pca_rotations |>
         axis.text.y = element_blank())
 ```
 
-The following heatmap shows the gene loadings for the first 20 PCs. \[Need the data to visualise again results\]
+The following heatmap shows the gene loadings for the first 20 PCs. Certain genes drive the rotation around specific PCs, like the central dark red cluster in PC13, but overall the loadings are mildly spread across all genes. Clustering by gene loadings might help visualise which genes matter more to a PC than others.
 
 ```{r}
-pcs_of_interest = c("PC1", "PC2")
+pcs_of_interest = c("PC4", "PC5")
 
 target_genes <- top_PC_genes |> filter(PC %in% pcs_of_interest) |> pull(gene)
 
 gravier_pca_rotations_wide |> filter(gene %in% target_genes) |> select(gene, all_of(pcs_of_interest))
 ```
 
-The following table contains the top 10 genes per PC with the highest absolute loading. Only the top \# PCs deemed important in explaining early metastasis were considered.
+Given such results, we only focused on the top 10 genes per PC with the highest absolute loading. Only the top \# PCs deemed important in explaining early metastasis were considered.
 
 Genes highlighted in bold (?) are the ones reported in the Forest plot.
 
