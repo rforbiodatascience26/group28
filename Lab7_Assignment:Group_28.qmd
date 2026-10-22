@@ -65,12 +65,28 @@ write data description section
 
 put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
 
+```{r}
+gravier <- gravier |>
+  bind_cols() |>
+  as_tibble() |>
+  mutate(y = case_when(y == "poor" ~ 1,
+                       y == "good" ~ 0)) |> 
+  relocate(early_metastasis = y)
+```
+
 transform the data in long format for genes and expression (call new variable dataset_name_long)
+
+```{r}
+gravier_long <- gravier |>
+  pivot_longer(cols = -early_metastasis,
+               names_to = "gene",
+               values_to = "expression")
+```
 
 fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
 
 ```{r}
-dataset_name_long_lms <- dataset_name_long %>%
+gravier_long_lms <- gravier_long %>%
   group_by(gene) %>%
   nest() %>%
   mutate(
@@ -81,7 +97,7 @@ dataset_name_long_lms <- dataset_name_long %>%
 unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
 
 ```{r}
-dataset_name_estimates <- dataset_name_long_lms |>
+gravier_estimates <- gravier_long_lms |>
   mutate(tidy_model = map(model_object, broom::tidy)) |>
   unnest(tidy_model) |>
   filter(term != "(Intercept)") |>
@@ -170,6 +186,20 @@ gravier_pca_rotations_wide |>
 ### Forest plot
 
 Forest plot of significant genes by lm
+
+```{r}
+gravier_estimates |>
+  filter(is_significant == "yes") |>
+  mutate(gene = fct_reorder(.f = gene, .x = estimate)) |>
+  
+  ggplot(aes(x = estimate, y = gene)) + 
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) +
+  geom_point() +
+  geom_vline(xintercept = 0) +
+  labs(x="Estimates (95%CIs)", y="",
+       title="Genes Associated with Early Metastasis in Small Node-Negative Breast Carcinoma") +
+  theme_minimal()
+```
 
 Coment results of forest plot
 
