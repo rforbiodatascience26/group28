@@ -19,17 +19,17 @@ How aggressively a tumour behaves depends a lot on which genes the tumour cells 
 
 The aim of this analysis is to identify prognostic biomarker genes associated with early metastasis in breast cancer patients by integrating linear modeling of gene expression profiles with Principal Component Analysis (PCA). Specifically, the objectives are:
 
-- To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
+-   To fit linear models for individual gene expressions against early metastasis status, adjusting and filtering for statistically significant differentially expressed genes.
 
-- To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
+-   To perform Principal Component Analysis (PCA) using a tidyverse framework to reduce data dimensionality, evaluate variance explained by each component, and analyze patient clustering and gene loading contributions.
 
 ## Library loading
 
 ```{r}
+library("here")
 library("tidyverse") 
 library("broom") 
 library("cowplot")
-library("here")
 ```
 
 ## Data loading
@@ -39,22 +39,34 @@ raw_dir <- here("data/_raw/")
 data_file <- "gravier.RData"
 csv_file <- "gravier.csv.gz"
 data_loc <- "https://github.com/ramhiser/datamicroarray/raw/master/data/"
+```
 
+We create the path "data/\_raw/" if it doesn't exist. Here we will store our data.
+
+```{r}
 if( !dir.exists(raw_dir) ){
   dir.create(path = raw_dir, recursive = TRUE)
 }
+```
 
+We download and efficiently save the dataset if absent.
+
+```{r}
 if( !file.exists(str_c(raw_dir, csv_file)) ){
   download.file(
     url = str_c(data_loc, data_file),
     destfile = str_c(raw_dir, data_file))
+  
+  load(file = str_c(raw_dir, data_file))
+  write_csv(gravier, str_c(raw_dir, csv_file))
 }
+```
 
-load(file = str_c(raw_dir, data_file))
-write_csv(bind_cols(gravier$x, y = gravier$y), str_c(raw_dir, csv_file))
+We load the data and display it.
 
-gravier_data <- read_csv(str_c(raw_dir, csv_file))
-gravier_data
+```{r}
+gravier <- read_csv(str_c(raw_dir, csv_file))
+gravier
 ```
 
 ## Data Description
@@ -63,10 +75,10 @@ write data description section
 
 ## Data Processing I (linear models)
 
-put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
+Merge the x and y elements in the gravier dataset (list) into a single dataframe. *y* is then refactored as 0/1, moved to the first column and renamed *early_metastasis*.
 
 ```{r}
-gravier <- gravier_data |>
+gravier <- gravier |>
   bind_cols() |>
   as_tibble() |>
   mutate(y = case_when(y == "poor" ~ 1,
@@ -74,7 +86,7 @@ gravier <- gravier_data |>
   relocate(early_metastasis = y)
 ```
 
-transform the data in long format for genes and expression (call new variable dataset_name_long)
+*gravier* is transformed into long format to have all genes in a single column (*gene*) and their respective expression in another (*expression*).
 
 ```{r}
 gravier_long <- gravier |>
@@ -83,7 +95,7 @@ gravier_long <- gravier |>
                values_to = "expression")
 ```
 
-fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
+Fit a linear model (lm) for each gene expression using early_metastasis as the predictor. The resulting lm model is nested in *gravier_long_lms*.
 
 ```{r}
 gravier_long_lms <- gravier_long |>
@@ -94,7 +106,7 @@ gravier_long_lms <- gravier_long |>
   )
 ```
 
-unnest the model, and filter out intercepts , ungroup, and select relevant columns(call new variable dataset_name_estimates)
+Retrieve estimates for the slope coefficient, and tidy the model.
 
 ```{r}
 gravier_estimates <- gravier_long_lms |>
@@ -109,26 +121,22 @@ compute the q.value, and the is_significant cols
 
 ## Data Processing II (PCA)
 
-perform pca on dataset_name (call variable dataset_name_pca)
+We perform PCA of the *gravier* data.
 
 ```{r}
-gravier_pca <- prcomp(gravier, scale = TRUE)
-```
-
-extract variance explained by each PC (call variable dataset_name_pca_explained_var)
-
-extract rotations (call variable dataset_name_pca_rotations)
-
-```{r}
-gravier_pca <- gravier_data |>
+gravier_pca <- gravier |>
   select(-early_metastasis) |>
   prcomp(scale = T)
 ```
+
+We extract the % of explained variance by each PC from *gravier_pca*.
 
 ```{r}
 gravier_pca_explained_var <- gravier_pca |>
   tidy(matrix = "eigenvalues")
 ```
+
+We extract rotations from *gravier_pca* and factor the PC column after prepending the string "PC" to each value.
 
 ```{r}
 gravier_pca_rotations <- gravier_pca |>
@@ -140,11 +148,15 @@ gravier_pca_rotations <- gravier_pca |>
   rename(gene = column)
 ```
 
+We transform the *gravier_pca_rotations* data into wide format.
+
 ```{r}
 gravier_pca_rotations_wide <- gravier_pca_rotations |>
   pivot_wider(names_from = "PC",
               values_from = "value")
 ```
+
+We extract the top 10 genes (greatest absolute loading) for each PC.
 
 ```{r}
 top_PC_genes <- gravier_pca_rotations |>
@@ -155,34 +167,6 @@ top_PC_genes <- gravier_pca_rotations |>
           ) |>
   slice_head(n = 10) |>
   ungroup()
-```
-
-```{r}
-arrow_style <- arrow(
-  angle = 20, ends = "first", type = "closed", length = grid::unit(8, "pt")
-)
-
-# plot rotation matrix
-
-x_col = "PC1"
-y_col = "PC2"
-
-
-target_genes <- top_PC_genes |>
-  filter(PC %in% c(x_col, y_col)) |>
-  pull(gene)
-
-gravier_pca_rotations_wide |>
-  filter(gene %in% target_genes) |>
-  ggplot(aes(.data[[x_col]] * 1000, .data[[y_col]] * 1000)) +
-  geom_segment(xend = 0, yend = 0, arrow = arrow_style) +
-  geom_text(
-    aes(label = gene),
-    hjust = 1, nudge_x = -0.02, 
-    color = "#904C2F"
-  ) +
-  coord_fixed() + # fix aspect ratio to 1:1
-  theme_minimal_grid(12)
 ```
 
 ## Results
