@@ -288,7 +288,7 @@ gravier_pca_augmented |>
   labs(colour = "Early metastasis")
 ```
 
-NOW COMMMENT THIS
+There is a better separation of the two classes compared to PC1 and PC2, as expected since we selected them, but we still have some overlap, so we can't answer if the differences between patients' gene expression profiles come from the metastasis status.
 
 ### Variance explained by each PC
 
