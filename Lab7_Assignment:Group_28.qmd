@@ -86,9 +86,9 @@ gravier_long <- gravier |>
 fit a lm for each gene expression using early_metastasis (call new variable dataset_name_long_lms and col model_object)
 
 ```{r}
-gravier_long_lms <- gravier_long %>%
-  group_by(gene) %>%
-  nest() %>%
+gravier_long_lms <- gravier_long |>
+  group_by(gene) |>
+  nest() |>
   mutate(
     model_object = map(data, ~ lm(expression ~ early_metastasis, data = .x))
   )
