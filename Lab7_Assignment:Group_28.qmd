@@ -115,13 +115,15 @@ Retrieve estimates for the slope coefficient, and tidy the model.
 
 ```{r}
 gravier_estimates <- gravier_long_lms |>
-  mutate(tidy_model = map(.x = model_object, 
-                          .f = broom::tidy)
-         ) |>
+  mutate(tidy_model = map (.x = model_object,
+                                  .f = ~tidy(.x, conf.int = T,
+                                             conf.level = 0.95)
+                                  )) |>
+
   unnest(tidy_model) |>
   filter(term != "(Intercept)") |>
   ungroup() |>
-  select(gene, estimate, std.error, statistic, p.value)
+  select(gene, estimate, std.error, statistic, p.value, conf.low, conf.high)
 ```
 
 compute the q.value, and the is_significant cols
@@ -300,7 +302,7 @@ gravier_pca_explained_var |>
   labs(x = "Principal Component", y = "Variance Explained")
 ```
 
-PC1 covers 8.3% of the variance and PC2 covers 6.8%, so together they only give us 15.1%. After that the bars drop off slowly, and there is no clear elbow in the plot. This means that no small group of components stands out as the important ones. Therefore it would not help much to plot another pair than PC1 and PC2, since the following components are not much smaller. This also explains why we did not see any separation between the groups in the PCA plot.
+PC1 covers 8.3% of the variance and PC2 covers 6.8%, so together they only give us 15.1%. After that the bars drop off slowly, and there is no clear elbow in the plot. Even though other components explain less variance than the first two, it could be interesting to consider other combinations in case another PC separates better the groups either by itself or in combination with others.
 
 ### PCA loadings
 
@@ -326,11 +328,7 @@ gravier_pca_rotations_wide |> filter(gene %in% target_genes) |> select(gene, all
 
 Given such results, we only focused on the top 10 genes of PC4 and PC5 with the highest absolute loading.
 
-Genes highlighted in bold (?) are the ones reported in the Forest plot.
-
 From the two independent analyses we can see how the same genes keep popping up.
-
-Comment plot rotation matrix (which are the genes that contribute most to each PC? Are any of the genes found in the forest plot coming up again?)
 
 ## Conclusions
 
