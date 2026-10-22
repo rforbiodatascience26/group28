@@ -59,7 +59,7 @@ if( !file.exists(str_c(raw_dir, csv_file)) ){
     destfile = str_c(raw_dir, data_file))
   
   load(file = str_c(raw_dir, data_file))
-  write_csv(gravier, str_c(raw_dir, csv_file))
+  write_csv(bind_cols(gravier$x, y = gravier$y), str_c(raw_dir, csv_file))
 }
 ```
 
@@ -123,6 +123,12 @@ gravier_estimates <- gravier_long_lms |>
 ```
 
 compute the q.value, and the is_significant cols
+
+```{r}
+gravier_estimates <- gravier_estimates |>
+  mutate(q.value = p.adjust(p.value),
+       is_significant = case_when(q.value > 0.05 ~ "no", TRUE ~ "yes"))
+```
 
 ## Data Processing II (PCA)
 
