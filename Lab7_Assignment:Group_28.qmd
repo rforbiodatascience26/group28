@@ -66,7 +66,7 @@ write data description section
 put together x and y into the same df, put y as first col, refactor y as 0/1, and call it early_metastasis (overwrite variable)
 
 ```{r}
-gravier <- gravier |>
+gravier <- gravier_data |>
   bind_cols() |>
   as_tibble() |>
   mutate(y = case_when(y == "poor" ~ 1,
