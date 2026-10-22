@@ -71,7 +71,7 @@ gravier
 
 ## Data Description
 
-write data description section
+In this report, we look at the data from Gravier et al. (2010), who studied small node-negative breast carcinomas. The data contain log2 gene expression levels for 2,905 genes measured in 168 patients. Of these patients, 111 did not develop early metastasis, and 57 did.
 
 ## Data Processing I (linear models)
 
