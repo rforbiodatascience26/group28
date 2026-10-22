@@ -53,6 +53,7 @@ if( !dir.exists(raw_dir) ){
 We download and efficiently save the dataset if absent.
 
 ```{r}
+#| message: false
 if( !file.exists(str_c(raw_dir, csv_file)) ){
   download.file(
     url = str_c(data_loc, data_file),
@@ -66,6 +67,7 @@ if( !file.exists(str_c(raw_dir, csv_file)) ){
 We load the data and display it.
 
 ```{r}
+#| message: false
 gravier <- read_csv(str_c(raw_dir, csv_file))
 gravier
 ```
@@ -140,6 +142,18 @@ gravier_pca <- gravier |>
   prcomp(scale = T)
 ```
 
+We augment the data.
+
+```{r}
+gravier_pca_augmented <- gravier_pca |>
+  augment(gravier |>
+            select(early_metastasis)) |>
+  rename_with(
+    .fn = ~ str_remove(.x, "^\\.fitted"),
+    .cols = starts_with(".fittedPC")
+  )
+```
+
 We extract the % of explained variance by each PC from *gravier_pca*.
 
 ```{r}
@@ -180,6 +194,35 @@ top_PC_genes <- gravier_pca_rotations |>
   ungroup()
 ```
 
+We fit a linear model to explain each data point living in the new coordinate space by means of early_metastasis to find the most important PCs to distinguish between early metastasis or not.
+
+```{r}
+gravier_pca_coords_lms <- gravier_pca |>
+  augment(gravier) |>
+  select(early_metastasis, starts_with(".fittedPC")) |>
+  pivot_longer(
+    cols = starts_with(".fittedPC"),
+    names_to = "PC",
+    values_to = "coord"
+  ) |>
+  group_by(PC) |>
+  nest() |>
+  mutate(
+    model_object = map(.x = data,
+                       .f = ~ lm(coord ~ early_metastasis,
+                                 data = .x)
+                       ),
+    tidy_model = map(.x = model_object, 
+                          .f = broom::tidy)
+    ) |>
+  unnest(tidy_model) |>
+  filter(term != "(Intercept)") |>
+  ungroup() |>
+  arrange(p.value) |>
+  mutate(PC = sub("\\.fitted", "", PC)) |>
+  select(-data, -model_object, -term)
+```
+
 ## Results
 
 ### Forest plot
@@ -207,29 +250,43 @@ The Estimates (95% CI) plot displays the average difference in gene expression b
 
 ### Data in PC coordinates
 
-```{r}
-gravier_pca_coords <- gravier_pca |>
-  augment(gravier) |>
-  select(PC4 = .fittedPC4,
-         PC5 = .fittedPC5,
-         early_metastasis) |>
-  mutate(early_metastasis = case_when(early_metastasis == 0 ~ "No",
-                                      early_metastasis == 1 ~ "Yes"))
-```
+We perform PCA to reduce the dimensionality of the data and work with less features.
 
 ```{r}
-gravier_pca_coords |>
-  ggplot(mapping = aes(x = PC4,
-                       y = PC5,
+gravier_pca_coords_lms
+```
+
+Since we want to distinguish patients with early metastasis from those without, we fitted a linear model for each PC. The results are summarised in the table above, where rows are ordered by p-value. PC4 and PC5 appear to be the most significant, and will be used in the downstream analysis.
+
+```{r}
+gravier_pca_augmented |>
+  mutate(early_metastasis = factor(early_metastasis)) |>
+  ggplot(mapping = aes(x = PC1,
+                       y = PC2,
                        colour = early_metastasis)) +
   geom_point(size = 1.5) +
-  scale_colour_manual(values = c("No" = "steelblue",
-                                 "Yes" = "firebrick")) +
+  scale_colour_manual(values = c("1" = "steelblue", "0" = "firebrick"),
+                      labels = c("1" = "No", "0" = "Yes")) +
   theme_minimal_grid(12) +
   labs(colour = "Early metastasis")
 ```
 
-The two groups are not separated in the plot. Patients with and without early metastasis lie mixed together, and neither PC1 nor PC2 tells them apart. We do see two loose clusters along PC1, but both of them contain a mix of the two groups. Therefore, the biggest differences between patients' gene expression profiles do not seem to come from metastasis status.
+As a proof of concept, we visualise PC1 against PC2. The two groups are not separated in the plot. Patients with and without early metastasis lie mixed together, and neither PC1 nor PC2 tells them apart. We do see two loose clusters along PC1, but both of them contain a mix of the two groups. Therefore, the biggest differences between patients' gene expression profiles do not seem to come from metastasis status.
+
+```{r}
+gravier_pca_augmented |>
+  mutate(early_metastasis = factor(early_metastasis)) |>
+  ggplot(mapping = aes(x = PC4,
+                       y = PC5,
+                       colour = early_metastasis)) +
+  geom_point(size = 1.5) +
+  scale_colour_manual(values = c("1" = "steelblue", "0" = "firebrick"),
+                      labels = c("1" = "No", "0" = "Yes")) +
+  theme_minimal_grid(12) +
+  labs(colour = "Early metastasis")
+```
+
+NOW COMMMENT THIS
 
 ### Variance explained by each PC
 
@@ -267,7 +324,7 @@ target_genes <- top_PC_genes |> filter(PC %in% pcs_of_interest) |> pull(gene)
 gravier_pca_rotations_wide |> filter(gene %in% target_genes) |> select(gene, all_of(pcs_of_interest))
 ```
 
-Given such results, we only focused on the top 10 genes per PC with the highest absolute loading. Only the top \# PCs deemed important in explaining early metastasis were considered.
+Given such results, we only focused on the top 10 genes of PC4 and PC5 with the highest absolute loading.
 
 Genes highlighted in bold (?) are the ones reported in the Forest plot.
 
