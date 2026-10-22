@@ -110,11 +110,14 @@ Retrieve estimates for the slope coefficient, and tidy the model.
 
 ```{r}
 gravier_estimates <- gravier_long_lms |>
-  mutate(tidy_model = map(model_object, broom::tidy)) |>
+  mutate(tidy_model = map (.x = model_object,
+                                  .f = ~tidy(.x, conf.int = T,
+                                             conf.level = 0.95)
+                                  )) |>
   unnest(tidy_model) |>
   filter(term != "(Intercept)") |>
   ungroup() |>
-  select(gene, estimate, std.error, statistic, p.value)
+  select(gene, estimate, std.error, statistic, p.value, conf.low, conf.high)
 ```
 
 compute the q.value, and the is_significant cols
